@@ -28,19 +28,17 @@ SCOPE_VISITOR = 1
 SCOPE_SESSION = 2
 SCOPE_PAGE = 3
 
+TRACKED_DOMAIN_RE = re.compile(r'^\w$')
 PROPERTY_ID_RE = re.compile(r'^UA-\d+-\d+$')
 SETUP_CODE = """
-    <script type="text/javascript">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', '%(property_id)s']);
-      _gaq.push(['_trackPageview']);
-      %(commands)s
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
+      ga('create', '%(property_id)s', '%(tracked_domain_name)');
+      ga('send', 'pageview');
 
     </script>
 """
@@ -74,6 +72,9 @@ class GoogleAnalyticsNode(Node):
         self.property_id = get_required_setting(
                 'GOOGLE_ANALYTICS_PROPERTY_ID', PROPERTY_ID_RE,
                 "must be a string looking like 'UA-XXXXXX-Y'")
+        self.tracked_domain_name = get_required_setting(
+                'GOOGLE_ANALYTICS_TRACKED_DOMAIN', TRACKED_DOMAIN_RE,
+                "must be a string ")
 
     def render(self, context):
         commands = self._get_domain_commands(context)
